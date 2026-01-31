@@ -22,6 +22,8 @@ export class ItemsService {
     }
 
     const item = this.itemsRepository.create({
+      name: dto.name,
+      description: dto.description ?? null,
       unitId: dto.unitId,
       isActive: true,
     });
@@ -41,6 +43,14 @@ export class ItemsService {
         throw new NotFoundException('Unit not found');
       }
       item.unitId = dto.unitId;
+    }
+
+    if (dto.name !== undefined) {
+      item.name = dto.name;
+    }
+
+    if (dto.description !== undefined) {
+      item.description = dto.description;
     }
 
     return this.itemsRepository.save(item);
