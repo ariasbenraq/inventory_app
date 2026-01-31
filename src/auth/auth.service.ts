@@ -58,16 +58,17 @@ export class AuthService {
     const defaultRoleName =
       this.configService.get<string>('AUTH_DEFAULT_ROLE') ?? 'USER';
     let defaultRole = await this.rolesRepository.findOne({
-      where: { name: defaultRoleName },
+      where: [{ name: defaultRoleName }, { code: defaultRoleName }],
     });
 
     if (!defaultRole) {
-      defaultRole = await this.rolesRepository.save(
-        this.rolesRepository.create({
-          name: defaultRoleName,
-          code: defaultRoleName,
-        }),
+      await this.rolesRepository.upsert(
+        { name: defaultRoleName, code: defaultRoleName },
+        ['code'],
       );
+      defaultRole = await this.rolesRepository.findOne({
+        where: { code: defaultRoleName },
+      });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
