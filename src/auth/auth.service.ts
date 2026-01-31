@@ -91,11 +91,16 @@ export class AuthService {
   }
 
   async changePassword(
-    userId: string,
-    { currentPassword, newPassword }: ChangePasswordDto,
+    userId: string | null,
+    { currentPassword, newPassword, username }: ChangePasswordDto,
   ): Promise<UserResponseDto> {
+    const identifier = userId ?? username;
+    if (!identifier) {
+      throw new BadRequestException('User identifier is required.');
+    }
+
     const user = await this.usersRepository.findOne({
-      where: { id: userId },
+      where: userId ? { id: userId } : { username: identifier },
       relations: ['roles'],
     });
 
