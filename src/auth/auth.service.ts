@@ -7,6 +7,7 @@ import * as bcrypt from 'bcryptjs';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { User } from '../users/user.entity';
 import { Role } from '../roles/role.entity';
 import { UserResponseDto } from '../users/dto/user-response.dto';
@@ -77,6 +78,29 @@ export class AuthService {
     const token = await this.createToken(saved);
 
     return { accessToken: token, user: this.toUserResponse(saved) };
+  }
+
+  async changePassword(
+    userId: string,
+    { currentPassword, newPassword }: ChangePasswordDto,
+  ): Promise<UserResponseDto> {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['roles'],
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const passwordMatches = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!passwordMatches) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    const saved = await this.usersRepository.save(user);
+    return this.toUserResponse(saved);
   }
 
   private async createToken(user: User): Promise<string> {
