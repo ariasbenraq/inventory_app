@@ -1,5 +1,7 @@
-import { Body, Controller, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -11,18 +13,31 @@ import { UserResponseDto } from '../users/dto/user-response.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post('login')
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
-  async login(@Body() body: LoginDto): Promise<AuthResponseDto> {
-    return this.authService.login(body);
+  async login(
+    @Body() body: LoginDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<AuthResponseDto> {
+    const payload = await this.authService.login(body);
+    this.setAuthCookie(response, payload.accessToken);
+    return payload;
   }
 
   @Post('register')
   @Throttle({ default: { limit: 3, ttl: 60_000 } })
-  async register(@Body() body: RegisterDto): Promise<AuthResponseDto> {
-    return this.authService.register(body);
+  async register(
+    @Body() body: RegisterDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<AuthResponseDto> {
+    const payload = await this.authService.register(body);
+    this.setAuthCookie(response, payload.accessToken);
+    return payload;
   }
 
   @Patch('change-password')
@@ -32,5 +47,15 @@ export class AuthController {
     @Body() body: ChangePasswordDto,
   ): Promise<UserResponseDto> {
     return this.authService.changePassword(request.user?.userId ?? '', body);
+  }
+
+  private setAuthCookie(response: Response, accessToken: string): void {
+    const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
+    response.cookie('access_token', accessToken, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: isProduction,
+      maxAge: 60 * 60 * 1000,
+    });
   }
 }
