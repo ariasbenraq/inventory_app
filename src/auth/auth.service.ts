@@ -70,6 +70,9 @@ export class AuthService {
         where: { code: defaultRoleName },
       });
     }
+    if (!defaultRole) {
+      throw new BadRequestException('Default role is not configured.');
+    }
 
     const passwordHash = await bcrypt.hash(password, 10);
     const user = this.usersRepository.create({
