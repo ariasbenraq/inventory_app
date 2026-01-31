@@ -56,13 +56,15 @@ export class AuthService {
     }
 
     const defaultRoleName =
-      this.configService.get<string>('AUTH_DEFAULT_ROLE') ?? 'REQ_USER';
-    const defaultRole = await this.rolesRepository.findOne({
+      this.configService.get<string>('AUTH_DEFAULT_ROLE') ?? 'USER';
+    let defaultRole = await this.rolesRepository.findOne({
       where: { name: defaultRoleName },
     });
 
     if (!defaultRole) {
-      throw new BadRequestException('Default role is not configured.');
+      defaultRole = await this.rolesRepository.save(
+        this.rolesRepository.create({ name: defaultRoleName }),
+      );
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
