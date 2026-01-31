@@ -18,6 +18,9 @@ export class User {
   @Column({ name: 'password_hash' })
   passwordHash!: string;
 
+  @Column({ name: 'full_name' })
+  fullName!: string;
+
   @Column({ name: 'is_active', default: true })
   isActive!: boolean;
 
