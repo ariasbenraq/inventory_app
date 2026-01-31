@@ -63,7 +63,10 @@ export class AuthService {
 
     if (!defaultRole) {
       defaultRole = await this.rolesRepository.save(
-        this.rolesRepository.create({ name: defaultRoleName }),
+        this.rolesRepository.create({
+          name: defaultRoleName,
+          code: defaultRoleName,
+        }),
       );
     }
 
