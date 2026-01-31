@@ -1,24 +1,14 @@
-import { ArrayNotEmpty, IsArray, IsNumber, IsString, ValidateNested } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsUUID, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-
-class CreateRequestItemDto {
-  @IsString()
-  itemId!: string;
-
-  @IsString()
-  unitId!: string;
-
-  @IsNumber()
-  quantity!: number;
-}
+import { RequestItemDto } from './request-item.dto';
 
 export class CreateRequestDto {
-  @IsString()
+  @IsUUID()
   ministryId!: string;
 
   @IsArray()
   @ArrayNotEmpty()
   @ValidateNested({ each: true })
-  @Type(() => CreateRequestItemDto)
-  items!: CreateRequestItemDto[];
+  @Type(() => RequestItemDto)
+  items!: RequestItemDto[];
 }

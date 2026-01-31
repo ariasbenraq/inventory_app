@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Unit } from '../units/unit.entity';
 import { InventoryMovement } from '../inventory/inventory-movement.entity';
 
@@ -7,14 +7,15 @@ export class Item {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
-  name!: string;
+  @Column({ name: 'unit_id' })
+  unitId!: string;
 
-  @Column({ name: 'base_unit_id' })
-  baseUnitId!: string;
+  @ManyToOne(() => Unit)
+  @JoinColumn({ name: 'unit_id' })
+  unit!: Unit;
 
-  @OneToMany(() => Unit, (unit) => unit.item)
-  units!: Unit[];
+  @Column({ name: 'is_active', type: 'boolean', default: true })
+  isActive!: boolean;
 
   @OneToMany(() => InventoryMovement, (movement) => movement.item)
   movements!: InventoryMovement[];
