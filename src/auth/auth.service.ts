@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -91,16 +91,11 @@ export class AuthService {
   }
 
   async changePassword(
-    userId: string | null,
-    { currentPassword, newPassword, username }: ChangePasswordDto,
+    userId: string,
+    { currentPassword, newPassword }: ChangePasswordDto,
   ): Promise<UserResponseDto> {
-    const identifier = userId ?? username;
-    if (!identifier) {
-      throw new BadRequestException('User identifier is required.');
-    }
-
     const user = await this.usersRepository.findOne({
-      where: userId ? { id: userId } : { username: identifier },
+      where: { id: userId },
       relations: ['roles'],
     });
 

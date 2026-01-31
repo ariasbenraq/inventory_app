@@ -1,4 +1,4 @@
-import { Body, Controller, Patch, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import { Response } from 'express';
@@ -7,6 +7,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuthenticatedRequest } from '../common/types';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 
@@ -40,11 +41,12 @@ export class AuthController {
   }
 
   @Patch('change-password')
+  @UseGuards(JwtAuthGuard)
   async changePassword(
     @Req() request: AuthenticatedRequest,
     @Body() body: ChangePasswordDto,
   ): Promise<UserResponseDto> {
-    return this.authService.changePassword(request.user?.userId ?? null, body);
+    return this.authService.changePassword(request.user?.userId ?? '', body);
   }
 
   private setAuthCookie(response: Response, accessToken: string): void {

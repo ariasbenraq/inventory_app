@@ -84,33 +84,4 @@ describe('AuthService.changePassword', () => {
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
-
-  it('updates the password when a username is provided', async () => {
-    const passwordHash = await bcrypt.hash('OldPass123', 10);
-    const user = {
-      id: 'user-2',
-      username: 'user-2',
-      passwordHash,
-      fullName: 'User Two',
-      roles: [],
-      isActive: true,
-      isTestUser: false,
-      lastLoginAt: null,
-    } as User;
-
-    usersRepository.findOne.mockResolvedValue(user);
-    usersRepository.save.mockImplementation(async (savedUser) => savedUser as User);
-
-    const response = await service.changePassword(null, {
-      username: 'user-2',
-      currentPassword: 'OldPass123',
-      newPassword: 'NewPass123',
-    });
-
-    expect(usersRepository.findOne).toHaveBeenCalledWith({
-      where: { username: 'user-2' },
-      relations: ['roles'],
-    });
-    expect(response.id).toBe('user-2');
-  });
 });
