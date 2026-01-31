@@ -1,0 +1,87 @@
+# ===============================
+# Node / NestJS
+# ===============================
+node_modules/
+dist/
+coverage/
+
+# NestJS build info
+.nest/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===============================
+# Environment variables
+# ===============================
+.env
+.env.*
+!.env.example
+
+# ===============================
+# OS / Editor
+# ===============================
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# JetBrains
+.idea/
+*.iml
+
+# ===============================
+# Test / QA artifacts
+# ===============================
+test-results/
+playwright-report/
+cypress/screenshots/
+cypress/videos/
+
+# ===============================
+# Database / ORM
+# ===============================
+# Prisma
+prisma/dev.db
+prisma/*.db
+prisma/migrations/**/migration.sql
+
+# TypeORM
+ormconfig.json
+ormconfig.js
+typeorm.log
+
+# ===============================
+# Docker
+# ===============================
+docker-compose.override.yml
+*.pid
+
+# ===============================
+# Secrets / Keys
+# ===============================
+*.pem
+*.key
+*.crt
+
+# ===============================
+# Temporary files
+# ===============================
+tmp/
+temp/
+.cache/
+
+# ===============================
+# Misc
+# ===============================
+*.swp
+*.swo
+*.bak
