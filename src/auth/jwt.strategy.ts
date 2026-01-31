@@ -14,7 +14,13 @@ interface JwtPayload {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(configService: ConfigService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        (request) => {
+          const cookies = parseCookieHeader(request?.headers?.cookie);
+          return cookies.access_token;
+        },
+      ]),
       ignoreExpiration: false,
       secretOrKey: configService.getOrThrow<string>('JWT_SECRET'),
     });
@@ -27,4 +33,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       isTestUser: payload.isTestUser,
     };
   }
+}
+
+function parseCookieHeader(headerValue?: string): Record<string, string> {
+  if (!headerValue) {
+    return {};
+  }
+
+  return headerValue.split(';').reduce<Record<string, string>>((cookies, cookie) => {
+    const [name, ...rest] = cookie.trim().split('=');
+    if (!name) {
+      return cookies;
+    }
+    cookies[name] = decodeURIComponent(rest.join('='));
+    return cookies;
+  }, {});
 }
