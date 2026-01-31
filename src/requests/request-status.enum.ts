@@ -1,5 +1,7 @@
 export enum RequestStatus {
   PENDING = 'PENDING',
   FULFILLED = 'FULFILLED',
+  CONFIRMED = 'CONFIRMED',
+  CANCELLED = 'CANCELLED',
   REJECTED = 'REJECTED',
 }
