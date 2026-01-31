@@ -259,8 +259,8 @@ export class RequestsService {
       ministryId: request.ministry?.id ?? '',
       createdById: includeCreatedBy ? request.createdBy?.id : undefined,
       items: (request.items ?? []).map((item) => ({
-        itemId: (item.item as Item)?.id ?? (item.item as unknown as string),
-        unitId: item.unit?.id ?? (item.unit as unknown as string),
+        itemId: Number((item.item as Item)?.id ?? item.item),
+        unitId: Number(item.unit?.id ?? item.unit),
         quantity: Number(item.quantity),
       })),
     };

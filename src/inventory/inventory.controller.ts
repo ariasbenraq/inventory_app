@@ -54,7 +54,7 @@ export class InventoryController {
       uniqueItems: number;
     };
     topItems: Array<{
-      itemId: string;
+      itemId: number;
       name: string;
       movementsCount: number;
       inQuantity: number;

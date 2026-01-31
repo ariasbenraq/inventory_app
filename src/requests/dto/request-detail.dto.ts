@@ -1,8 +1,8 @@
 import { RequestStatus } from '../request-status.enum';
 
 export class RequestDetailItemDto {
-  itemId!: string;
-  unitId!: string;
+  itemId!: number;
+  unitId!: number;
   quantity!: number;
 }
 

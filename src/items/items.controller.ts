@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../common/roles.guard';
 import { Roles } from '../common/roles.decorator';
@@ -21,7 +21,7 @@ export class ItemsController {
   @Patch(':id')
   @Roles('USER')
   async updateItem(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateItemDto,
   ): Promise<Item> {
     return this.itemsService.updateItem(id, body);
@@ -29,7 +29,7 @@ export class ItemsController {
 
   @Patch(':id/disable')
   @Roles('USER')
-  async disableItem(@Param('id') id: string): Promise<Item> {
+  async disableItem(@Param('id', ParseIntPipe) id: number): Promise<Item> {
     return this.itemsService.disableItem(id);
   }
 

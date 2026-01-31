@@ -31,7 +31,7 @@ export class ItemsService {
     return this.itemsRepository.save(item);
   }
 
-  async updateItem(id: string, dto: UpdateItemDto): Promise<Item> {
+  async updateItem(id: number, dto: UpdateItemDto): Promise<Item> {
     const item = await this.itemsRepository.findOne({ where: { id } });
     if (!item) {
       throw new NotFoundException('Item not found');
@@ -56,7 +56,7 @@ export class ItemsService {
     return this.itemsRepository.save(item);
   }
 
-  async disableItem(id: string): Promise<Item> {
+  async disableItem(id: number): Promise<Item> {
     const item = await this.itemsRepository.findOne({ where: { id } });
     if (!item) {
       throw new NotFoundException('Item not found');
