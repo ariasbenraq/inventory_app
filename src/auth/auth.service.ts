@@ -46,7 +46,7 @@ export class AuthService {
     return { accessToken: token, user: this.toUserResponse(saved) };
   }
 
-  async register({ username, password }: RegisterDto): Promise<AuthResponseDto> {
+  async register({ username, password, fullName }: RegisterDto): Promise<AuthResponseDto> {
     const existingUser = await this.usersRepository.findOne({
       where: { username },
     });
@@ -56,11 +56,20 @@ export class AuthService {
     }
 
     const defaultRoleName =
-      this.configService.get<string>('AUTH_DEFAULT_ROLE') ?? 'REQ_USER';
-    const defaultRole = await this.rolesRepository.findOne({
-      where: { name: defaultRoleName },
+      this.configService.get<string>('AUTH_DEFAULT_ROLE') ?? 'USER';
+    let defaultRole = await this.rolesRepository.findOne({
+      where: [{ name: defaultRoleName }, { code: defaultRoleName }],
     });
 
+    if (!defaultRole) {
+      await this.rolesRepository.upsert(
+        { name: defaultRoleName, code: defaultRoleName },
+        ['code'],
+      );
+      defaultRole = await this.rolesRepository.findOne({
+        where: { code: defaultRoleName },
+      });
+    }
     if (!defaultRole) {
       throw new BadRequestException('Default role is not configured.');
     }
@@ -69,6 +78,7 @@ export class AuthService {
     const user = this.usersRepository.create({
       username,
       passwordHash,
+      fullName: fullName ?? username,
       isActive: true,
       isTestUser: false,
       roles: [defaultRole],
@@ -115,6 +125,7 @@ export class AuthService {
     return {
       id: user.id,
       username: user.username,
+      fullName: user.fullName,
       isActive: user.isActive,
       isTestUser: user.isTestUser,
       roles: user.roles?.map((role) => role.name) ?? [],

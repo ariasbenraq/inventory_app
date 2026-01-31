@@ -9,6 +9,10 @@ export class CreateUserDto {
   password!: string;
 
   @IsOptional()
+  @IsString()
+  fullName?: string;
+
+  @IsOptional()
   @IsBoolean()
   isTestUser?: boolean;
 

@@ -37,6 +37,7 @@ export class UsersService {
     const user = this.usersRepository.create({
       username: dto.username,
       passwordHash,
+      fullName: dto.fullName ?? dto.username,
       isTestUser: dto.isTestUser ?? false,
       isActive: true,
       roles,
@@ -83,6 +84,7 @@ export class UsersService {
     return {
       id: user.id,
       username: user.username,
+      fullName: user.fullName,
       isActive: user.isActive,
       isTestUser: user.isTestUser,
       roles: user.roles?.map((role) => role.name) ?? [],
