@@ -7,6 +7,7 @@ import { InventoryMovement } from './inventory-movement.entity';
 import { InventoryInDto } from './dto/inventory-in.dto';
 import { InventoryOutDto } from './dto/inventory-out.dto';
 import { DateRangeQueryDto } from './dto/date-range-query.dto';
+import { DashboardMetricsQueryDto } from './dto/dashboard-metrics-query.dto';
 import { AuthenticatedRequest } from '../common/types';
 
 @Controller('inventory')
@@ -38,5 +39,28 @@ export class InventoryController {
     @Query() query: DateRangeQueryDto,
   ): Promise<InventoryMovement[]> {
     return this.inventoryService.getMovements(query);
+  }
+
+  @Get('metrics')
+  @Roles('REQ_ADMIN')
+  async getMetrics(
+    @Query() query: DashboardMetricsQueryDto,
+  ): Promise<{
+    range: { from?: string; to?: string };
+    summary: {
+      totalMovements: number;
+      totalInQuantity: number;
+      totalOutQuantity: number;
+      uniqueItems: number;
+    };
+    topItems: Array<{
+      itemId: string;
+      name: string;
+      movementsCount: number;
+      inQuantity: number;
+      outQuantity: number;
+    }>;
+  }> {
+    return this.inventoryService.getDashboardMetrics(query);
   }
 }
