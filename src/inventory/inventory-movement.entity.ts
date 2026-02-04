@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Item } from '../items/item.entity';
 
 export enum InventoryMovementType {
@@ -11,7 +11,14 @@ export class InventoryMovement {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
+  @Column({ name: 'item_id', type: 'bigint' })
+  itemId!: string;
+
+  @Column({ name: 'performed_by', type: 'uuid' })
+  performedBy!: string;
+
   @ManyToOne(() => Item, (item) => item.movements)
+  @JoinColumn({ name: 'item_id' })
   item!: Item;
 
   @Column({ name: 'movement_type', type: 'varchar' })

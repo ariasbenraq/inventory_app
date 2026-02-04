@@ -1,11 +1,13 @@
-import { IsNumber, IsUUID, Min } from 'class-validator';
+import { IsNumber, IsNumberString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class InventoryInDto {
-  @IsUUID()
+  @Type(() => String)
+  @IsNumberString()
   itemId!: string;
 
-  @IsUUID()
+  @Type(() => String)
+  @IsNumberString()
   unitId!: string;
 
   @Type(() => Number)

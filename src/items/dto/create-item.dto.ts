@@ -1,6 +1,8 @@
-import { IsUUID } from 'class-validator';
+import { IsNumberString } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateItemDto {
-  @IsUUID()
+  @Type(() => String)
+  @IsNumberString()
   unitId!: string;
 }

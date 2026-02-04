@@ -17,8 +17,14 @@ export class InventoryController {
 
   @Post('in')
   @Roles('USER')
-  async registerIn(@Body() body: InventoryInDto): Promise<InventoryMovement> {
-    return this.inventoryService.registerInventoryIn(body);
+  async registerIn(
+    @Req() request: AuthenticatedRequest,
+    @Body() body: InventoryInDto,
+  ): Promise<InventoryMovement> {
+    return this.inventoryService.registerInventoryIn(
+      request.user?.userId ?? '',
+      body,
+    );
   }
 
   @Post('out')

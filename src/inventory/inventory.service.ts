@@ -57,6 +57,7 @@ export class InventoryService {
   ) {}
 
   async registerInventoryIn(
+    userId: string,
     dto: InventoryInDto,
   ): Promise<InventoryMovement> {
     const item = await this.itemsRepository.findOne({ where: { id: dto.itemId } });
@@ -72,7 +73,9 @@ export class InventoryService {
     const quantity = dto.quantity * factor;
 
     const movement = this.movementsRepository.create({
+      itemId: dto.itemId,
       item: { id: dto.itemId },
+      performedBy: userId,
       movementType: InventoryMovementType.IN,
       quantity,
     });

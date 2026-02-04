@@ -4,10 +4,10 @@ import { InventoryMovement } from '../inventory/inventory-movement.entity';
 
 @Entity({ name: 'items' })
 export class Item {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn('increment', { type: 'bigint' })
   id!: string;
 
-  @Column({ name: 'unit_id' })
+  @Column({ name: 'unit_id', type: 'bigint' })
   unitId!: string;
 
   @ManyToOne(() => Unit)
