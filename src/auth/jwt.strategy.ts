@@ -16,6 +16,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         ExtractJwt.fromAuthHeaderAsBearerToken(),
+        (request) => extractTokenFromHeaders(request),
         (request) => {
           const cookies = parseCookieHeader(request?.headers?.cookie);
           return cookies.access_token;
@@ -48,4 +49,39 @@ function parseCookieHeader(headerValue?: string): Record<string, string> {
     cookies[name] = decodeURIComponent(rest.join('='));
     return cookies;
   }, {});
+}
+
+function extractTokenFromHeaders(
+  request?: Record<string, { [key: string]: string | string[] | undefined }>,
+): string | null {
+  if (!request?.headers) {
+    return null;
+  }
+
+  const headerValue =
+    request.headers.authorization ??
+    request.headers.auth ??
+    request.headers['x-access-token'] ??
+    request.headers['access-token'];
+
+  if (!headerValue) {
+    return null;
+  }
+
+  const value = Array.isArray(headerValue) ? headerValue[0] : headerValue;
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  const bearerPrefix = 'bearer ';
+  const tokenPrefix = 'token ';
+  if (trimmed.toLowerCase().startsWith(bearerPrefix)) {
+    return trimmed.slice(bearerPrefix.length).trim();
+  }
+  if (trimmed.toLowerCase().startsWith(tokenPrefix)) {
+    return trimmed.slice(tokenPrefix.length).trim();
+  }
+
+  return trimmed;
 }
