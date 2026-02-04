@@ -19,7 +19,7 @@ export class Item {
   @Column({ name: 'name' })
   name!: string;
 
-  @Column({ name: 'description', nullable: true })
+  @Column({ name: 'description', type: 'text', nullable: true })
   description?: string | null;
 
   @Column({ name: 'unit_id', type: 'bigint' })
