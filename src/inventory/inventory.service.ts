@@ -72,6 +72,7 @@ export class InventoryService {
     const quantity = dto.quantity * factor;
 
     const movement = this.movementsRepository.create({
+      itemId: dto.itemId,
       item: { id: dto.itemId },
       movementType: InventoryMovementType.IN,
       quantity,
