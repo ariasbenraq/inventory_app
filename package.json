@@ -8,7 +8,8 @@
     "start:dev": "nest start --watch",
     "build": "nest build",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest"
+    "test": "jest",
+    "reset:qa-password": "ts-node src/scripts/reset-qa-password.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.8",
