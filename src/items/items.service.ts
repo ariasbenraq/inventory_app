@@ -22,6 +22,8 @@ export class ItemsService {
     }
 
     const item = this.itemsRepository.create({
+      name: dto.name,
+      description: dto.description ?? null,
       unitId: dto.unitId,
       isActive: true,
     });
@@ -29,7 +31,7 @@ export class ItemsService {
     return this.itemsRepository.save(item);
   }
 
-  async updateItem(id: string, dto: UpdateItemDto): Promise<Item> {
+  async updateItem(id: number, dto: UpdateItemDto): Promise<Item> {
     const item = await this.itemsRepository.findOne({ where: { id } });
     if (!item) {
       throw new NotFoundException('Item not found');
@@ -43,10 +45,18 @@ export class ItemsService {
       item.unitId = dto.unitId;
     }
 
+    if (dto.name !== undefined) {
+      item.name = dto.name;
+    }
+
+    if (dto.description !== undefined) {
+      item.description = dto.description;
+    }
+
     return this.itemsRepository.save(item);
   }
 
-  async disableItem(id: string): Promise<Item> {
+  async disableItem(id: number): Promise<Item> {
     const item = await this.itemsRepository.findOne({ where: { id } });
     if (!item) {
       throw new NotFoundException('Item not found');

@@ -22,7 +22,7 @@ type DashboardSummary = {
 };
 
 type TopItemMetric = {
-  itemId: string;
+  itemId: number;
   name: string;
   movementsCount: number;
   inQuantity: number;
@@ -189,7 +189,7 @@ export class InventoryService {
         uniqueItems: Number(rawSummary?.uniqueItems ?? 0),
       },
       topItems: rawTopItems.map((item) => ({
-        itemId: item.itemId,
+        itemId: Number(item.itemId),
         name: item.name,
         movementsCount: Number(item.movementsCount ?? 0),
         inQuantity: Number(item.inQuantity ?? 0),

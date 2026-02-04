@@ -1,14 +1,30 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Unit } from '../units/unit.entity';
 import { InventoryMovement } from '../inventory/inventory-movement.entity';
+import { RequestItem } from '../requests/request-item.entity';
 
 @Entity({ name: 'items' })
 export class Item {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+  @PrimaryGeneratedColumn('increment', { type: 'bigint' })
+  id!: number;
 
-  @Column({ name: 'unit_id' })
-  unitId!: string;
+  @Column({ type: 'text', unique: true })
+  name!: string;
+
+  @Column({ type: 'text', nullable: true })
+  description?: string | null;
+
+  @Column({ name: 'unit_id', type: 'bigint' })
+  unitId!: number;
 
   @ManyToOne(() => Unit)
   @JoinColumn({ name: 'unit_id' })
@@ -17,6 +33,15 @@ export class Item {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive!: boolean;
 
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
+  updatedAt!: Date;
+
   @OneToMany(() => InventoryMovement, (movement) => movement.item)
   movements!: InventoryMovement[];
+
+  @OneToMany(() => RequestItem, (requestItem) => requestItem.item)
+  requestItems!: RequestItem[];
 }

@@ -116,7 +116,7 @@ export class AuthService {
   private async createToken(user: User): Promise<string> {
     return this.jwtService.signAsync({
       sub: user.id,
-      roles: user.roles?.map((role) => role.name) ?? [],
+      roles: user.roles?.map((role) => role.code) ?? [],
       isTestUser: user.isTestUser,
     });
   }

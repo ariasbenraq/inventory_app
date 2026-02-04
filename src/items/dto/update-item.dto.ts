@@ -1,7 +1,19 @@
-import { IsOptional, IsUUID } from 'class-validator';
+import { IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class UpdateItemDto {
   @IsOptional()
-  @IsUUID()
-  unitId?: string;
+  @IsString()
+  @MinLength(1)
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  unitId?: number;
 }

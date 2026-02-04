@@ -10,7 +10,7 @@ export class UnitsService {
     private readonly unitsRepository: Repository<Unit>,
   ) {}
 
-  async getUnitFactor(unitId: string): Promise<number> {
+  async getUnitFactor(unitId: number): Promise<number> {
     const unit = await this.unitsRepository.findOne({
       where: { id: unitId },
     });
