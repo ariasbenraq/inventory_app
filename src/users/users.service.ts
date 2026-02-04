@@ -87,7 +87,7 @@ export class UsersService {
       fullName: user.fullName,
       isActive: user.isActive,
       isTestUser: user.isTestUser,
-      roles: user.roles?.map((role) => role.name) ?? [],
+      roles: user.roles?.map((role) => role.code) ?? [],
       lastLoginAt: user.lastLoginAt ?? null,
     };
   }
