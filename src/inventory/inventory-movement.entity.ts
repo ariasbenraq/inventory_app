@@ -14,6 +14,9 @@ export class InventoryMovement {
   @Column({ name: 'item_id', type: 'bigint' })
   itemId!: string;
 
+  @Column({ name: 'performed_by', type: 'uuid' })
+  performedBy!: string;
+
   @ManyToOne(() => Item, (item) => item.movements)
   @JoinColumn({ name: 'item_id' })
   item!: Item;
