@@ -106,11 +106,10 @@ export class InventoryService {
       throw new BadRequestException('Invalid inventory out function name');
     }
 
-    await this.dataSource.query(`SELECT ${functionName}($1, $2, $3)`, [
-      dto.itemId,
-      quantity,
-      userId,
-    ]);
+    await this.dataSource.query(
+      `SELECT ${functionName}($1::bigint, $2::numeric, $3::uuid)`,
+      [dto.itemId, quantity, userId],
+    );
   }
 
   async getMovements(
