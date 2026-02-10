@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
+import { DataSource, QueryFailedError, Repository, SelectQueryBuilder } from 'typeorm';
 import { InventoryMovement, InventoryMovementType } from './inventory-movement.entity';
 import { Item } from '../items/item.entity';
 import { UnitsService } from '../units/units.service';
@@ -101,14 +101,34 @@ export class InventoryService {
 
     const functionName =
       this.configService.get<string>('INVENTORY_OUT_FUNCTION') ?? 'inventory_out';
+    const functionIdentifier = this.buildFunctionIdentifier(functionName);
 
-    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(functionName)) {
-      throw new BadRequestException('Invalid inventory out function name');
+    const functionSignatures = [
+      `SELECT ${functionIdentifier}($1::bigint, $2::numeric, $3::uuid)`,
+      `SELECT ${functionIdentifier}($1::integer, $2::numeric, $3::uuid)`,
+      `SELECT ${functionIdentifier}($1::bigint, $2::double precision, $3::uuid)`,
+      `SELECT ${functionIdentifier}($1::integer, $2::double precision, $3::uuid)`,
+    ];
+
+    for (const statement of functionSignatures) {
+      try {
+        await this.dataSource.query(statement, [dto.itemId, quantity, userId]);
+        return;
+      } catch (error) {
+        if (
+          error instanceof QueryFailedError &&
+          typeof error.message === 'string' &&
+          error.message.includes('does not exist')
+        ) {
+          continue;
+        }
+
+        throw error;
+      }
     }
 
-    await this.dataSource.query(
-      `SELECT ${functionName}($1::bigint, $2::numeric, $3::uuid)`,
-      [dto.itemId, quantity, userId],
+    throw new BadRequestException(
+      `Inventory out function not found. Configure INVENTORY_OUT_FUNCTION with an existing function name/schema in database.`,
     );
   }
 
@@ -198,6 +218,21 @@ export class InventoryService {
         outQuantity: Number(item.outQuantity ?? 0),
       })),
     };
+  }
+
+
+  private buildFunctionIdentifier(functionName: string): string {
+    const parts = functionName.split('.');
+    if (parts.length === 0 || parts.length > 2) {
+      throw new BadRequestException('Invalid inventory out function name');
+    }
+
+    const identifierPattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+    if (parts.some((part) => !identifierPattern.test(part))) {
+      throw new BadRequestException('Invalid inventory out function name');
+    }
+
+    return parts.map((part) => `"${part}"`).join('.');
   }
 
   private applyDateRange(
