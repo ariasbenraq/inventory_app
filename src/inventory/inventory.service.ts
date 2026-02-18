@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -61,8 +60,6 @@ export class InventoryService {
     userId: string,
     dto: InventoryInDto,
   ): Promise<InventoryMovement> {
-    this.assertUuid(userId);
-
     const item = await this.itemsRepository.findOne({ where: { id: dto.itemId } });
     if (!item) {
       throw new NotFoundException('Item not found');
@@ -90,8 +87,6 @@ export class InventoryService {
     userId: string,
     dto: InventoryOutDto,
   ): Promise<void> {
-    this.assertUuid(userId);
-
     const item = await this.itemsRepository.findOne({ where: { id: dto.itemId } });
     if (!item) {
       throw new NotFoundException('Item not found');
@@ -113,6 +108,14 @@ export class InventoryService {
       `SELECT ${functionIdentifier}($1::integer, $2::numeric, $3::uuid)`,
       `SELECT ${functionIdentifier}($1::bigint, $2::double precision, $3::uuid)`,
       `SELECT ${functionIdentifier}($1::integer, $2::double precision, $3::uuid)`,
+      `SELECT ${functionIdentifier}($1::bigint, $2::numeric, $3::bigint)`,
+      `SELECT ${functionIdentifier}($1::integer, $2::numeric, $3::bigint)`,
+      `SELECT ${functionIdentifier}($1::bigint, $2::double precision, $3::bigint)`,
+      `SELECT ${functionIdentifier}($1::integer, $2::double precision, $3::bigint)`,
+      `SELECT ${functionIdentifier}($1::bigint, $2::numeric, $3::integer)`,
+      `SELECT ${functionIdentifier}($1::integer, $2::numeric, $3::integer)`,
+      `SELECT ${functionIdentifier}($1::bigint, $2::double precision, $3::integer)`,
+      `SELECT ${functionIdentifier}($1::integer, $2::double precision, $3::integer)`,
     ];
 
     for (const statement of functionSignatures) {
@@ -238,17 +241,6 @@ export class InventoryService {
     }
 
     return parts.map((part) => `"${part}"`).join('.');
-  }
-
-  private assertUuid(value: string): void {
-    const uuidPattern =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-    if (!uuidPattern.test(value)) {
-      throw new UnauthorizedException(
-        'Invalid authenticated user id format. Login again to obtain a valid token.',
-      );
-    }
   }
 
   private applyDateRange(
