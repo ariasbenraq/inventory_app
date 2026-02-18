@@ -123,12 +123,18 @@ export class InventoryService {
         await this.dataSource.query(statement, [dto.itemId, quantity, userId]);
         return;
       } catch (error) {
-        if (
-          error instanceof QueryFailedError &&
-          typeof error.message === 'string' &&
-          error.message.includes('does not exist')
-        ) {
-          continue;
+        if (error instanceof QueryFailedError) {
+          const message = typeof error.message === 'string' ? error.message : '';
+          const driverError = error.driverError as { code?: string; message?: string } | undefined;
+          const sqlState = driverError?.code;
+
+          if (
+            message.includes('does not exist') ||
+            sqlState === '22P02' ||
+            message.includes('invalid input syntax for type uuid')
+          ) {
+            continue;
+          }
         }
 
         throw error;
