@@ -51,6 +51,8 @@ import { ItemStockView } from './inventory/item-stock.view';
           InventoryMovement,
           ItemStockView,
         ],
+        migrations: [`${__dirname}/database/migrations/*{.ts,.js}`],
+        migrationsTableName: 'schema_migrations',
         synchronize: false,
       }),
     }),

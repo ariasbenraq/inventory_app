@@ -99,14 +99,19 @@ export class InventoryService {
     const factor = await this.unitsService.getUnitFactor(dto.unitId);
     const quantity = dto.quantity * factor;
 
-    const functionName =
-      this.configService.get<string>('INVENTORY_OUT_FUNCTION') ?? 'inventory_out';
+    const configuredFunction =
+      this.configService.get<string>('INVENTORY_OUT_FUNCTION') ?? 'public.inventory_out';
 
-    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(functionName)) {
-      throw new BadRequestException('Invalid inventory out function name');
+    const functionReference = this.getSafeFunctionReference(configuredFunction);
+    const functionExists = await this.functionExists(functionReference);
+
+    if (!functionExists) {
+      throw new BadRequestException(
+        'Inventory out function not found. Configure INVENTORY_OUT_FUNCTION with an existing function name/schema in database.',
+      );
     }
 
-    await this.dataSource.query(`SELECT ${functionName}($1, $2, $3)`, [
+    await this.dataSource.query(`SELECT ${functionReference}($1, $2, $3)`, [
       dto.itemId,
       quantity,
       userId,
@@ -199,6 +204,41 @@ export class InventoryService {
         outQuantity: Number(item.outQuantity ?? 0),
       })),
     };
+  }
+
+  private getSafeFunctionReference(functionName: string): string {
+    const parts = functionName.trim().split('.');
+
+    if (parts.length === 0 || parts.length > 2) {
+      throw new BadRequestException('Invalid inventory out function name');
+    }
+
+    for (const part of parts) {
+      if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(part)) {
+        throw new BadRequestException('Invalid inventory out function name');
+      }
+    }
+
+    return parts.length === 1 ? `public.${parts[0]}` : `${parts[0]}.${parts[1]}`;
+  }
+
+  private async functionExists(functionReference: string): Promise<boolean> {
+    const [schema, name] = functionReference.split('.');
+    const result = await this.dataSource.query(
+      `
+        SELECT EXISTS (
+          SELECT 1
+          FROM pg_catalog.pg_proc p
+          JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+          WHERE n.nspname = $1
+            AND p.proname = $2
+            AND pg_catalog.pg_get_function_identity_arguments(p.oid) = 'uuid, numeric, uuid'
+        ) AS exists
+      `,
+      [schema, name],
+    );
+
+    return Boolean(result?.[0]?.exists);
   }
 
   private applyDateRange(
