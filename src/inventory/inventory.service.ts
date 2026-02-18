@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
+import { DataSource, QueryFailedError, Repository, SelectQueryBuilder } from 'typeorm';
 import { InventoryMovement, InventoryMovementType } from './inventory-movement.entity';
 import { Item } from '../items/item.entity';
 import { UnitsService } from '../units/units.service';
@@ -99,23 +99,37 @@ export class InventoryService {
     const factor = await this.unitsService.getUnitFactor(dto.unitId);
     const quantity = dto.quantity * factor;
 
-    const configuredFunction =
-      this.configService.get<string>('INVENTORY_OUT_FUNCTION') ?? 'public.inventory_out';
+    const functionName =
+      this.configService.get<string>('INVENTORY_OUT_FUNCTION') ?? 'inventory_out';
+    const functionIdentifier = this.buildFunctionIdentifier(functionName);
 
-    const functionReference = this.getSafeFunctionReference(configuredFunction);
-    const functionExists = await this.functionExists(functionReference);
+    const functionSignatures = [
+      `SELECT ${functionIdentifier}($1::bigint, $2::numeric, $3::uuid)`,
+      `SELECT ${functionIdentifier}($1::integer, $2::numeric, $3::uuid)`,
+      `SELECT ${functionIdentifier}($1::bigint, $2::double precision, $3::uuid)`,
+      `SELECT ${functionIdentifier}($1::integer, $2::double precision, $3::uuid)`,
+    ];
 
-    if (!functionExists) {
-      throw new BadRequestException(
-        'Inventory out function not found. Configure INVENTORY_OUT_FUNCTION with an existing function name/schema in database.',
-      );
+    for (const statement of functionSignatures) {
+      try {
+        await this.dataSource.query(statement, [dto.itemId, quantity, userId]);
+        return;
+      } catch (error) {
+        if (
+          error instanceof QueryFailedError &&
+          typeof error.message === 'string' &&
+          error.message.includes('does not exist')
+        ) {
+          continue;
+        }
+
+        throw error;
+      }
     }
 
-    await this.dataSource.query(`SELECT ${functionReference}($1, $2, $3)`, [
-      dto.itemId,
-      quantity,
-      userId,
-    ]);
+    throw new BadRequestException(
+      `Inventory out function not found. Configure INVENTORY_OUT_FUNCTION with an existing function name/schema in database.`,
+    );
   }
 
   async getMovements(
@@ -206,39 +220,19 @@ export class InventoryService {
     };
   }
 
-  private getSafeFunctionReference(functionName: string): string {
-    const parts = functionName.trim().split('.');
 
+  private buildFunctionIdentifier(functionName: string): string {
+    const parts = functionName.split('.');
     if (parts.length === 0 || parts.length > 2) {
       throw new BadRequestException('Invalid inventory out function name');
     }
 
-    for (const part of parts) {
-      if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(part)) {
-        throw new BadRequestException('Invalid inventory out function name');
-      }
+    const identifierPattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+    if (parts.some((part) => !identifierPattern.test(part))) {
+      throw new BadRequestException('Invalid inventory out function name');
     }
 
-    return parts.length === 1 ? `public.${parts[0]}` : `${parts[0]}.${parts[1]}`;
-  }
-
-  private async functionExists(functionReference: string): Promise<boolean> {
-    const [schema, name] = functionReference.split('.');
-    const result = await this.dataSource.query(
-      `
-        SELECT EXISTS (
-          SELECT 1
-          FROM pg_catalog.pg_proc p
-          JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
-          WHERE n.nspname = $1
-            AND p.proname = $2
-            AND pg_catalog.pg_get_function_identity_arguments(p.oid) = 'uuid, numeric, uuid'
-        ) AS exists
-      `,
-      [schema, name],
-    );
-
-    return Boolean(result?.[0]?.exists);
+    return parts.map((part) => `"${part}"`).join('.');
   }
 
   private applyDateRange(
