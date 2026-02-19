@@ -100,50 +100,30 @@ export class InventoryService {
     const quantity = dto.quantity * factor;
 
     const functionName =
-      this.configService.get<string>('INVENTORY_OUT_FUNCTION') ?? 'inventory_out';
+      this.configService.get<string>('INVENTORY_OUT_FUNCTION') ?? 'public.inventory_out';
     const functionIdentifier = this.buildFunctionIdentifier(functionName);
 
-    const functionSignatures = [
-      `SELECT ${functionIdentifier}($1::bigint, $2::numeric, $3::uuid)`,
-      `SELECT ${functionIdentifier}($1::integer, $2::numeric, $3::uuid)`,
-      `SELECT ${functionIdentifier}($1::bigint, $2::double precision, $3::uuid)`,
-      `SELECT ${functionIdentifier}($1::integer, $2::double precision, $3::uuid)`,
-      `SELECT ${functionIdentifier}($1::bigint, $2::numeric, $3::bigint)`,
-      `SELECT ${functionIdentifier}($1::integer, $2::numeric, $3::bigint)`,
-      `SELECT ${functionIdentifier}($1::bigint, $2::double precision, $3::bigint)`,
-      `SELECT ${functionIdentifier}($1::integer, $2::double precision, $3::bigint)`,
-      `SELECT ${functionIdentifier}($1::bigint, $2::numeric, $3::integer)`,
-      `SELECT ${functionIdentifier}($1::integer, $2::numeric, $3::integer)`,
-      `SELECT ${functionIdentifier}($1::bigint, $2::double precision, $3::integer)`,
-      `SELECT ${functionIdentifier}($1::integer, $2::double precision, $3::integer)`,
-    ];
+    try {
+      await this.dataSource.query(
+        `SELECT ${functionIdentifier}($1::bigint, $2::numeric, $3::bigint)`,
+        [dto.itemId, quantity, userId],
+      );
+      return;
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const message = typeof error.message === 'string' ? error.message : '';
+        const driverError = error.driverError as { code?: string } | undefined;
 
-    for (const statement of functionSignatures) {
-      try {
-        await this.dataSource.query(statement, [dto.itemId, quantity, userId]);
-        return;
-      } catch (error) {
-        if (error instanceof QueryFailedError) {
-          const message = typeof error.message === 'string' ? error.message : '';
-          const driverError = error.driverError as { code?: string; message?: string } | undefined;
-          const sqlState = driverError?.code;
-
-          if (
-            message.includes('does not exist') ||
-            sqlState === '22P02' ||
-            message.includes('invalid input syntax for type uuid')
-          ) {
-            continue;
-          }
+        if (message.includes('does not exist') || driverError?.code === '42883') {
+          throw new BadRequestException(
+            'Inventory out function not found. Configure INVENTORY_OUT_FUNCTION with an existing function name/schema in database.',
+          );
         }
-
-        throw error;
       }
+
+      throw error;
     }
 
-    throw new BadRequestException(
-      `Inventory out function not found. Configure INVENTORY_OUT_FUNCTION with an existing function name/schema in database.`,
-    );
   }
 
   async getMovements(

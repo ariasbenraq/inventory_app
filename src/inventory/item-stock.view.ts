@@ -5,6 +5,9 @@ export class ItemStockView {
   @ViewColumn({ name: 'item_id' })
   itemId!: string;
 
-  @ViewColumn({ name: 'quantity' })
-  quantity!: number;
+  @ViewColumn({ name: 'item_name' })
+  itemName!: string;
+
+  @ViewColumn({ name: 'stock' })
+  stock!: number;
 }

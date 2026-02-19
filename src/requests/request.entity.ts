@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -12,16 +13,23 @@ import { RequestStatus } from './request-status.enum';
 
 @Entity({ name: 'requests' })
 export class Request {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn('increment', { type: 'bigint' })
   id!: string;
 
   @ManyToOne(() => User)
+  @JoinColumn({ name: 'requested_by' })
   createdBy!: User;
 
   @ManyToOne(() => Ministry)
+  @JoinColumn({ name: 'ministry_id' })
   ministry!: Ministry;
 
-  @Column({ type: 'varchar', default: RequestStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: RequestStatus,
+    enumName: 'request_status',
+    default: RequestStatus.PENDING,
+  })
   status!: RequestStatus;
 
   @Column({ name: 'created_at', type: 'timestamptz', default: () => 'now()' })
