@@ -64,7 +64,6 @@ export class RequestsService {
           return this.requestItemsRepository.create({
             request: savedRequest,
             item: { id: item.itemId },
-            unit: { id: item.unitId },
             quantity,
           });
         }),
@@ -82,7 +81,7 @@ export class RequestsService {
   ): Promise<RequestDetailDto> {
     const request = await this.requestsRepository.findOne({
       where: { id: requestId, createdBy: { id: userId } },
-      relations: ['items', 'items.item', 'items.unit'],
+      relations: ['items', 'items.item'],
     });
 
     if (!request) {
@@ -121,15 +120,13 @@ export class RequestsService {
         const itemId =
           (existingItem.item as Item)?.id ??
           (existingItem.item as unknown as string);
-        const unitId =
-          existingItem.unit?.id ?? (existingItem.unit as unknown as string);
-        existingItems.set(`${itemId}:${unitId}`, existingItem);
+        existingItems.set(itemId, existingItem);
       }
 
       for (const item of dto.items) {
         const factor = await this.unitsService.getUnitFactor(item.unitId);
         const quantity = item.quantity * factor;
-        const key = `${item.itemId}:${item.unitId}`;
+        const key = item.itemId;
         const existing = existingItems.get(key);
 
         if (existing) {
@@ -139,7 +136,6 @@ export class RequestsService {
           const created = this.requestItemsRepository.create({
             request,
             item: { id: item.itemId },
-            unit: { id: item.unitId },
             quantity,
           });
           await manager.save(created);
@@ -195,7 +191,7 @@ export class RequestsService {
   async getMyRequests(userId: string): Promise<RequestDetailDto[]> {
     const requests = await this.requestsRepository.find({
       where: { createdBy: { id: userId } },
-      relations: ['items', 'items.item', 'items.unit', 'ministry'],
+      relations: ['items', 'items.item', 'ministry'],
       order: { createdAt: 'DESC' },
     });
 
@@ -204,7 +200,7 @@ export class RequestsService {
 
   async getAllRequests(): Promise<RequestDetailDto[]> {
     const requests = await this.requestsRepository.find({
-      relations: ['items', 'items.item', 'items.unit', 'ministry', 'createdBy'],
+      relations: ['items', 'items.item', 'ministry', 'createdBy'],
       order: { createdAt: 'DESC' },
     });
 
@@ -243,8 +239,8 @@ export class RequestsService {
     return this.requestsRepository.findOneOrFail({
       where: { id: requestId },
       relations: includeCreatedBy
-        ? ['items', 'items.item', 'items.unit', 'ministry', 'createdBy']
-        : ['items', 'items.item', 'items.unit', 'ministry'],
+        ? ['items', 'items.item', 'ministry', 'createdBy']
+        : ['items', 'items.item', 'ministry'],
     });
   }
 
@@ -260,7 +256,7 @@ export class RequestsService {
       createdById: includeCreatedBy ? request.createdBy?.id : undefined,
       items: (request.items ?? []).map((item) => ({
         itemId: (item.item as Item)?.id ?? (item.item as unknown as string),
-        unitId: item.unit?.id ?? (item.unit as unknown as string),
+        unitId: (item.item as Item)?.unitId ?? '',
         quantity: Number(item.quantity),
       })),
     };
