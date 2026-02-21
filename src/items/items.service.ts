@@ -5,6 +5,7 @@ import { Item } from './item.entity';
 import { Unit } from '../units/unit.entity';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { Brand } from './brand.entity';
 
 @Injectable()
 export class ItemsService {
@@ -13,6 +14,8 @@ export class ItemsService {
     private readonly itemsRepository: Repository<Item>,
     @InjectRepository(Unit)
     private readonly unitsRepository: Repository<Unit>,
+    @InjectRepository(Brand)
+    private readonly brandsRepository: Repository<Brand>,
   ) {}
 
   async createItem(dto: CreateItemDto): Promise<Item> {
@@ -21,10 +24,19 @@ export class ItemsService {
       throw new NotFoundException('Unit not found');
     }
 
+    if (dto.brandId) {
+      const brand = await this.brandsRepository.findOne({ where: { id: dto.brandId } });
+      if (!brand) {
+        throw new NotFoundException('Brand not found');
+      }
+    }
+
     const item = this.itemsRepository.create({
       name: dto.name,
       description: dto.description ?? null,
       unitId: dto.unitId,
+      brandId: dto.brandId ?? null,
+      attributes: dto.attributes ?? null,
       isActive: true,
     });
 
@@ -45,12 +57,28 @@ export class ItemsService {
       item.unitId = dto.unitId;
     }
 
+    if (dto.brandId !== undefined) {
+      if (dto.brandId === null) {
+        item.brandId = null;
+      } else {
+        const brand = await this.brandsRepository.findOne({ where: { id: dto.brandId } });
+        if (!brand) {
+          throw new NotFoundException('Brand not found');
+        }
+        item.brandId = dto.brandId;
+      }
+    }
+
     if (dto.name !== undefined) {
       item.name = dto.name;
     }
 
     if (dto.description !== undefined) {
       item.description = dto.description;
+    }
+
+    if (dto.attributes !== undefined) {
+      item.attributes = dto.attributes;
     }
 
     return this.itemsRepository.save(item);
@@ -71,6 +99,6 @@ export class ItemsService {
   }
 
   async getItems(): Promise<Item[]> {
-    return this.itemsRepository.find();
+    return this.itemsRepository.find({ relations: ['brand'] });
   }
 }
