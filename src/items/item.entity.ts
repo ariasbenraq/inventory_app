@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Unit } from '../units/unit.entity';
 import { InventoryMovement } from '../inventory/inventory-movement.entity';
+import { Brand } from './brand.entity';
 
 @Entity({ name: 'items' })
 export class Item {
@@ -21,6 +22,16 @@ export class Item {
 
   @Column({ name: 'description', type: 'text', nullable: true })
   description?: string | null;
+
+  @Column({ name: 'brand_id', type: 'bigint', nullable: true })
+  brandId?: string | null;
+
+  @ManyToOne(() => Brand, (brand) => brand.items, { nullable: true })
+  @JoinColumn({ name: 'brand_id' })
+  brand?: Brand | null;
+
+  @Column({ name: 'attributes', type: 'jsonb', nullable: true })
+  attributes?: Record<string, string> | null;
 
   @Column({ name: 'unit_id', type: 'bigint' })
   unitId!: string;

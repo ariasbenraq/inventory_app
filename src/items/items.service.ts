@@ -5,6 +5,7 @@ import { Item } from './item.entity';
 import { Unit } from '../units/unit.entity';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { Brand } from './brand.entity';
 
 @Injectable()
 export class ItemsService {
@@ -13,6 +14,8 @@ export class ItemsService {
     private readonly itemsRepository: Repository<Item>,
     @InjectRepository(Unit)
     private readonly unitsRepository: Repository<Unit>,
+    @InjectRepository(Brand)
+    private readonly brandsRepository: Repository<Brand>,
   ) {}
 
   async createItem(dto: CreateItemDto): Promise<Item> {
@@ -21,10 +24,14 @@ export class ItemsService {
       throw new NotFoundException('Unit not found');
     }
 
+    const brandId = await this.resolveBrandId(dto.brandId, dto.brandName);
+
     const item = this.itemsRepository.create({
       name: dto.name,
       description: dto.description ?? null,
       unitId: dto.unitId,
+      brandId,
+      attributes: dto.attributes ?? null,
       isActive: true,
     });
 
@@ -53,6 +60,14 @@ export class ItemsService {
       item.description = dto.description;
     }
 
+    if (dto.brandId !== undefined || dto.brandName !== undefined) {
+      item.brandId = await this.resolveBrandId(dto.brandId, dto.brandName);
+    }
+
+    if (dto.attributes !== undefined) {
+      item.attributes = dto.attributes;
+    }
+
     return this.itemsRepository.save(item);
   }
 
@@ -71,6 +86,40 @@ export class ItemsService {
   }
 
   async getItems(): Promise<Item[]> {
-    return this.itemsRepository.find();
+    return this.itemsRepository.find({ relations: { brand: true } });
+  }
+
+  private async resolveBrandId(
+    brandId?: string,
+    brandName?: string,
+  ): Promise<string | null> {
+    if (brandId && brandName) {
+      throw new BadRequestException('Use brandId or brandName, but not both');
+    }
+
+    if (brandId) {
+      const brand = await this.brandsRepository.findOne({ where: { id: brandId } });
+      if (!brand) {
+        throw new NotFoundException('Brand not found');
+      }
+
+      return brand.id;
+    }
+
+    if (brandName) {
+      const normalizedName = brandName.trim();
+      let brand = await this.brandsRepository.findOne({
+        where: { name: normalizedName },
+      });
+
+      if (!brand) {
+        brand = this.brandsRepository.create({ name: normalizedName });
+        brand = await this.brandsRepository.save(brand);
+      }
+
+      return brand.id;
+    }
+
+    return null;
   }
 }
