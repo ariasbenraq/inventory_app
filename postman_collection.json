@@ -3,7 +3,7 @@
     "name": "Inventory App API",
     "_postman_id": "inventory-app-api",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Colección de endpoints para pruebas de usuario. Usa {{baseUrl}} y {{accessToken}}. Algunas rutas requieren rol REQ_ADMIN."
+    "description": "Colección de endpoints para pruebas de usuario. Usa {{baseUrl}} y {{accessToken}}. Algunas rutas requieren rol REQ_ADMIN. Incluye endpoints de marcas y uso de brandId/attributes en items."
   },
   "variable": [
     {
@@ -165,7 +165,7 @@
             "url": "{{baseUrl}}/items",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Vasos descartables\",\n  \"description\": \"Vasos plásticos 200ml\",\n  \"unitId\": \"1\"\n}"
+              "raw": "{\n  \"name\": \"Extension eléctrica\",\n  \"description\": \"Cable de 10m\",\n  \"unitId\": \"1\",\n  \"brandId\": \"1\",\n  \"attributes\": {\n    \"color\": \"amarillo\",\n    \"largo\": \"10m\"\n  }\n}"
             }
           }
         },
@@ -186,7 +186,7 @@
             "url": "{{baseUrl}}/items/1",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Vasos descartables (Agua caliente)\",\n  \"description\": \"Para bebidas calientes\",\n  \"unitId\": \"1\"\n}"
+              "raw": "{\n  \"brandId\": \"2\",\n  \"attributes\": {\n    \"color\": \"negro\",\n    \"largo\": \"15m\",\n    \"uso\": \"exterior\"\n  }\n}"
             }
           }
         },
@@ -214,6 +214,87 @@
               }
             ],
             "url": "{{baseUrl}}/items"
+          }
+        },
+        {
+          "name": "Update Item (Clear Brand)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/items/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"brandId\": null\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brands",
+      "item": [
+        {
+          "name": "Create Brand",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/brands",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bticino\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Brands",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/brands?activeOnly=true"
+          }
+        },
+        {
+          "name": "Update Brand",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/brands/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bticino Pro\",\n  \"isActive\": true\n}"
+            }
           }
         }
       ]
