@@ -1,10 +1,10 @@
-import { ArrayNotEmpty, IsArray, IsOptional, IsUUID, ValidateNested } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsOptional, IsNumberString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { RequestItemDto } from './request-item.dto';
 
 export class UpdateRequestDto {
   @IsOptional()
-  @IsUUID()
+  @IsNumberString()
   ministryId?: string;
 
   @IsOptional()
