@@ -2,6 +2,34 @@ import { MigrationInterface, QueryRunner, Table, TableForeignKey } from 'typeorm
 
 export class InitialSchema1710000000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
+    const baselineTables = [
+      'roles',
+      'users',
+      'user_roles',
+      'units',
+      'items',
+      'ministries',
+      'requests',
+      'request_items',
+      'inventory_movements',
+    ];
+
+    const existingCount = (
+      await Promise.all(baselineTables.map((table) => queryRunner.hasTable(table)))
+    ).filter(Boolean).length;
+
+    // Some environments were provisioned manually before migrations were formalized.
+    // If the full baseline already exists, skip safely so this migration can be recorded.
+    if (existingCount === baselineTables.length) {
+      return;
+    }
+
+    if (existingCount > 0) {
+      throw new Error(
+        'InitialSchema1710000000000 detected a partially initialized database. Please complete bootstrap manually or baseline migrations before rerunning.',
+      );
+    }
+
     await queryRunner.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
 
     await queryRunner.createTable(
