@@ -9,7 +9,7 @@ import { Role } from '../roles/role.entity';
 
 @Entity({ name: 'users' })
 export class User {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn('increment', { type: 'bigint' })
   id!: string;
 
   @Column({ unique: true })
