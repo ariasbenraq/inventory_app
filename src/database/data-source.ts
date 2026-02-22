@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm';
 import { User } from '../users/user.entity';
 import { Role } from '../roles/role.entity';
 import { Item } from '../items/item.entity';
+import { Brand } from '../items/brand.entity';
 import { Unit } from '../units/unit.entity';
 import { Ministry } from '../ministries/ministry.entity';
 import { Request } from '../requests/request.entity';
@@ -38,6 +39,7 @@ export const AppDataSource = new DataSource({
     User,
     Role,
     Item,
+    Brand,
     Unit,
     Ministry,
     Request,

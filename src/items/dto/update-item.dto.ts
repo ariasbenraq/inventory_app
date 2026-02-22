@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsNumberString, IsOptional, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumberString,
+  IsObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateItemDto {
@@ -15,4 +21,18 @@ export class UpdateItemDto {
   @Type(() => String)
   @IsNumberString()
   unitId?: string;
+
+  @IsOptional()
+  @Type(() => String)
+  @IsNumberString()
+  brandId?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  brandName?: string;
+
+  @IsOptional()
+  @IsObject()
+  attributes?: Record<string, string>;
 }
