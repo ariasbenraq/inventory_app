@@ -1,4 +1,5 @@
 import {
+  IsEnum,
   IsNotEmpty,
   IsNumberString,
   IsObject,
@@ -6,6 +7,7 @@ import {
   IsString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ItemType } from '../item-type.enum';
 
 export class CreateItemDto {
   @IsString()
@@ -29,6 +31,10 @@ export class CreateItemDto {
   @IsOptional()
   @IsObject()
   attributes?: Record<string, string>;
+
+  @IsOptional()
+  @IsEnum(ItemType)
+  itemType?: ItemType;
 
   @Type(() => String)
   @IsNumberString()

@@ -6,6 +6,7 @@ import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { Item } from './item.entity';
+import { ItemType } from './item-type.enum';
 
 @Controller('items')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -31,6 +32,12 @@ export class ItemsController {
   @Roles('USER')
   async disableItem(@Param('id') id: string): Promise<Item> {
     return this.itemsService.disableItem(id);
+  }
+
+  @Get('attribute-dictionary')
+  @Roles('USER')
+  getAttributeDictionary(): Record<ItemType, readonly string[]> {
+    return this.itemsService.getAttributeDictionary();
   }
 
   @Get()

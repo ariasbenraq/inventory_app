@@ -11,6 +11,7 @@ import {
 import { Unit } from '../units/unit.entity';
 import { InventoryMovement } from '../inventory/inventory-movement.entity';
 import { Brand } from './brand.entity';
+import { ItemType } from './item-type.enum';
 
 @Entity({ name: 'items' })
 export class Item {
@@ -32,6 +33,15 @@ export class Item {
 
   @Column({ name: 'attributes', type: 'jsonb', nullable: true })
   attributes?: Record<string, string> | null;
+
+  @Column({
+    name: 'item_type',
+    type: 'enum',
+    enum: ItemType,
+    enumName: 'item_type',
+    default: ItemType.GENERAL,
+  })
+  itemType!: ItemType;
 
   @Column({ name: 'unit_id', type: 'bigint' })
   unitId!: string;

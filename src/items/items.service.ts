@@ -6,6 +6,8 @@ import { Unit } from '../units/unit.entity';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { Brand } from './brand.entity';
+import { ItemType } from './item-type.enum';
+import { ITEM_ATTRIBUTE_DICTIONARY } from './item-attributes.dictionary';
 
 @Injectable()
 export class ItemsService {
@@ -25,12 +27,15 @@ export class ItemsService {
     }
 
     const brandId = await this.resolveBrandId(dto.brandId, dto.brandName);
+    const itemType = dto.itemType ?? ItemType.GENERAL;
+    this.validateAttributes(itemType, dto.attributes);
 
     const item = this.itemsRepository.create({
       name: dto.name,
       description: dto.description ?? null,
       unitId: dto.unitId,
       brandId,
+      itemType,
       attributes: dto.attributes ?? null,
       isActive: true,
     });
@@ -64,6 +69,13 @@ export class ItemsService {
       item.brandId = await this.resolveBrandId(dto.brandId, dto.brandName);
     }
 
+    if (dto.itemType !== undefined) {
+      item.itemType = dto.itemType;
+    }
+
+    const nextAttributes = dto.attributes !== undefined ? dto.attributes : item.attributes;
+    this.validateAttributes(item.itemType, nextAttributes ?? undefined);
+
     if (dto.attributes !== undefined) {
       item.attributes = dto.attributes;
     }
@@ -87,6 +99,28 @@ export class ItemsService {
 
   async getItems(): Promise<Item[]> {
     return this.itemsRepository.find({ relations: { brand: true } });
+  }
+
+  getAttributeDictionary(): Record<ItemType, readonly string[]> {
+    return ITEM_ATTRIBUTE_DICTIONARY;
+  }
+
+  private validateAttributes(
+    itemType: ItemType,
+    attributes?: Record<string, string>,
+  ): void {
+    if (!attributes) {
+      return;
+    }
+
+    const allowedKeys = new Set(ITEM_ATTRIBUTE_DICTIONARY[itemType]);
+    const invalidKeys = Object.keys(attributes).filter((key) => !allowedKeys.has(key));
+
+    if (invalidKeys.length > 0) {
+      throw new BadRequestException(
+        `Invalid attributes for itemType ${itemType}: ${invalidKeys.join(', ')}`,
+      );
+    }
   }
 
   private async resolveBrandId(
